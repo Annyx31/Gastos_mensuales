@@ -1,0 +1,638 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Mis Finanzas — Anny</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #F7F5F0;
+  --card: #FFFFFF;
+  --text: #1A1A1A;
+  --muted: #888580;
+  --border: #E8E5DF;
+  --green: #2D6A4F;
+  --green-light: #D8F0E5;
+  --green-text: #1B4332;
+  --amber: #B5580A;
+  --amber-light: #FEF0DC;
+  --red: #9B2335;
+  --red-light: #FCEAED;
+  --blue: #1A4E8A;
+  --blue-light: #E8F0FB;
+  --accent: #C17D3C;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: 'DM Sans', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  padding-bottom: 40px;
+}
+.top-bar {
+  background: var(--card);
+  border-bottom: 1px solid var(--border);
+  padding: 18px 20px 14px;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+.top-bar h1 {
+  font-family: 'DM Serif Display', serif;
+  font-size: 22px;
+  color: var(--text);
+  letter-spacing: -0.3px;
+}
+.top-bar p { font-size: 12px; color: var(--muted); margin-top: 2px; }
+.month-switch {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 7px;
+  margin-top: 12px;
+}
+.month-btn {
+  padding: 9px 4px;
+  font-size: 13px;
+  font-family: 'DM Sans', sans-serif;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--muted);
+  cursor: pointer;
+  text-align: center;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+.month-btn.active {
+  background: var(--text);
+  color: #fff;
+  border-color: var(--text);
+  font-weight: 500;
+}
+.section { padding: 14px 16px 0; }
+.summary-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+.summary-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 14px;
+}
+.summary-card.full { grid-column: 1/-1; }
+.sc-label { font-size: 11px; color: var(--muted); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.05em; }
+.sc-value { font-size: 22px; font-weight: 500; color: var(--text); }
+.sc-value.green { color: var(--green); }
+.sc-value.red { color: var(--red); }
+.sc-value.amber { color: var(--amber); }
+.sc-sub { font-size: 11px; color: var(--muted); margin-top: 3px; }
+.progress-wrap { margin-top: 10px; }
+.progress-row { display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 5px; }
+.progress-track { height: 10px; background: var(--bg); border-radius: 99px; overflow: hidden; }
+.progress-fill { height: 100%; border-radius: 99px; transition: width 0.5s ease; }
+.savings-bar { margin-top: 8px; }
+.bar-labels { display: flex; gap: 0; margin-bottom: 4px; font-size: 10px; }
+.bar-segment { display: flex; flex-direction: column; align-items: center; font-size: 10px; }
+.stacked-bar { display: flex; height: 12px; border-radius: 99px; overflow: hidden; width: 100%; }
+.stacked-seg { height: 100%; transition: width 0.5s; }
+.legend-row { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 6px; }
+.legend-item { display: flex; align-items: center; gap: 4px; font-size: 10px; color: var(--muted); }
+.legend-dot { width: 8px; height: 8px; border-radius: 2px; }
+.form-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 16px;
+  margin-bottom: 12px;
+}
+.form-card h2 { font-family: 'DM Serif Display', serif; font-size: 17px; margin-bottom: 14px; }
+.field-label { font-size: 12px; color: var(--muted); margin-bottom: 5px; display: block; }
+textarea, input[type=text], input[type=number], select {
+  width: 100%;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 14px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 10px 12px;
+  background: var(--bg);
+  color: var(--text);
+  outline: none;
+  transition: border 0.15s;
+  -webkit-appearance: none;
+}
+textarea:focus, input:focus, select:focus { border-color: var(--accent); }
+textarea { resize: none; min-height: 72px; }
+.field-group { margin-bottom: 12px; }
+.method-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 7px;
+}
+.method-opt {
+  padding: 9px 8px;
+  font-size: 13px;
+  font-family: 'DM Sans', sans-serif;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--bg);
+  color: var(--muted);
+  cursor: pointer;
+  text-align: center;
+  transition: all 0.15s;
+}
+.method-opt.active { background: var(--text); color: #fff; border-color: var(--text); }
+.ai-btn {
+  width: 100%;
+  padding: 12px;
+  font-size: 14px;
+  font-weight: 500;
+  font-family: 'DM Sans', sans-serif;
+  background: var(--text);
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  margin-top: 4px;
+  transition: opacity 0.15s;
+}
+.ai-btn:active { opacity: 0.8; }
+.ai-btn:disabled { opacity: 0.5; }
+.ai-result {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 12px;
+  margin-top: 12px;
+  display: none;
+}
+.ai-result-label { font-size: 11px; color: var(--muted); margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.05em; }
+.ai-row { display: flex; justify-content: space-between; align-items: center; padding: 5px 0; border-bottom: 1px solid var(--border); font-size: 13px; }
+.ai-row:last-child { border-bottom: none; }
+.ai-row span { color: var(--muted); }
+.ai-row strong { color: var(--text); }
+.save-btn {
+  width: 100%;
+  padding: 12px;
+  font-size: 14px;
+  font-weight: 500;
+  font-family: 'DM Sans', sans-serif;
+  background: var(--green);
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  margin-top: 10px;
+  display: none;
+  transition: opacity 0.15s;
+}
+.save-btn:active { opacity: 0.8; }
+.spinner {
+  display: inline-block;
+  width: 14px; height: 14px;
+  border: 2px solid rgba(255,255,255,0.4);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+  vertical-align: -2px;
+  margin-right: 6px;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+.list-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 16px;
+}
+.list-card h2 { font-family: 'DM Serif Display', serif; font-size: 17px; margin-bottom: 4px; }
+.list-meta { font-size: 12px; color: var(--muted); margin-bottom: 14px; }
+.filter-row { display: flex; gap: 6px; margin-bottom: 12px; overflow-x: auto; scrollbar-width: none; }
+.filter-row::-webkit-scrollbar { display: none; }
+.filter-btn {
+  flex-shrink: 0;
+  padding: 4px 12px;
+  font-size: 12px;
+  font-family: 'DM Sans', sans-serif;
+  border-radius: 99px;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+}
+.filter-btn.active { background: var(--text); color: #fff; border-color: var(--text); }
+.expense-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 11px 0;
+  border-bottom: 1px solid var(--border);
+}
+.expense-item:last-child { border-bottom: none; }
+.exp-left { flex: 1; min-width: 0; }
+.exp-desc { font-size: 14px; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.exp-meta { font-size: 11px; color: var(--muted); margin-top: 3px; }
+.exp-cat {
+  display: inline-block;
+  font-size: 10px;
+  padding: 2px 7px;
+  border-radius: 99px;
+  margin-top: 4px;
+}
+.exp-right { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; margin-left: 10px; flex-shrink: 0; }
+.exp-amt { font-size: 14px; font-weight: 500; }
+.del-btn { font-size: 11px; color: var(--red); background: none; border: none; cursor: pointer; padding: 0; font-family: 'DM Sans', sans-serif; }
+.empty { text-align: center; padding: 24px 0; color: var(--muted); font-size: 13px; }
+.export-btn {
+  width: 100%;
+  padding: 10px;
+  font-size: 13px;
+  font-family: 'DM Sans', sans-serif;
+  background: transparent;
+  color: var(--muted);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  cursor: pointer;
+  margin-top: 12px;
+}
+.toast {
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%) translateY(80px);
+  background: var(--text);
+  color: #fff;
+  padding: 10px 20px;
+  border-radius: 99px;
+  font-size: 13px;
+  transition: transform 0.3s ease;
+  z-index: 100;
+  white-space: nowrap;
+}
+.toast.show { transform: translateX(-50%) translateY(0); }
+.divider { height: 1px; background: var(--border); margin: 14px 0; }
+</style>
+</head>
+<body>
+
+<div class="top-bar">
+  <h1>Mis finanzas</h1>
+  <p id="fecha-display"></p>
+</div>
+
+<div class="section" style="margin-top:14px">
+  <div class="summary-grid">
+    <div class="summary-card">
+      <div class="sc-label">Ingresos</div>
+      <div class="sc-value green">S/. 3,000</div>
+      <div class="sc-sub">Sueldo mensual</div>
+    </div>
+    <div class="summary-card">
+      <div class="sc-label">Ahorro meta</div>
+      <div class="sc-value" id="ahorro-meta-val" style="color:var(--accent)">S/. 0</div>
+      <div class="sc-sub" id="ahorro-sub">Mes de estabilización</div>
+    </div>
+    <div class="summary-card">
+      <div class="sc-label">Gastos fijos</div>
+      <div class="sc-value amber" id="fijos-val">S/. 1,268</div>
+      <div class="sc-sub" id="fijos-sub">ICA + Banco + Colegio</div>
+    </div>
+    <div class="summary-card">
+      <div class="sc-label">Presupuesto libre</div>
+      <div class="sc-value" id="libre-val">S/. 932</div>
+      <div class="sc-sub">Para gastos variables</div>
+    </div>
+    <div class="summary-card full">
+      <div class="sc-label">Gastos variables registrados</div>
+      <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px">
+        <div class="sc-value" id="gastado-val">S/. 0</div>
+        <div style="font-size:12px;color:var(--muted)" id="libre-restante">Libre: S/. 932</div>
+      </div>
+      <div class="progress-track">
+        <div class="progress-fill" id="prog-fill" style="width:0%;background:var(--green)"></div>
+      </div>
+      <div class="divider"></div>
+      <div class="sc-label" style="margin-bottom:6px">Distribución del sueldo</div>
+      <div class="stacked-bar" id="stacked-bar">
+        <div class="stacked-seg" id="seg-fijos" style="background:#B5580A;width:46.1%"></div>
+        <div class="stacked-seg" id="seg-var" style="background:#1A4E8A;width:0%"></div>
+        <div class="stacked-seg" id="seg-ahorro" style="background:#2D6A4F;width:20%"></div>
+        <div class="stacked-seg" id="seg-libre" style="background:#E8E5DF;width:33.9%"></div>
+      </div>
+      <div class="legend-row">
+        <div class="legend-item"><div class="legend-dot" style="background:#B5580A"></div>Fijos</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#1A4E8A"></div>Variables</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#2D6A4F"></div>Ahorro</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#E8E5DF"></div>Disponible</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <div class="form-card">
+    <h2>Registrar gasto</h2>
+    <div class="field-group">
+      <label class="field-label">Describe tu gasto en tus palabras</label>
+      <textarea id="gasto-input" placeholder="Ej: tomé taxi al trabajo 15 soles, compré yogurt y cereal en Tottus 28 soles..."></textarea>
+    </div>
+    <div class="field-group">
+      <label class="field-label">Método de pago</label>
+      <div class="method-grid">
+        <button class="method-opt active" onclick="selectMethod('Tarjeta OH',this)">Tarjeta OH</button>
+        <button class="method-opt" onclick="selectMethod('Amex Green',this)">Amex Green</button>
+        <button class="method-opt" onclick="selectMethod('BCP Oro',this)">BCP Oro</button>
+        <button class="method-opt" onclick="selectMethod('Yape / Efectivo',this)">Yape / Efectivo</button>
+      </div>
+    </div>
+    <button class="ai-btn" id="ai-btn" onclick="analizarGasto()">✦ Analizar con IA</button>
+    <div class="ai-result" id="ai-result">
+      <div class="ai-result-label">La IA detectó</div>
+      <div class="ai-row"><span>Descripción</span><strong id="r-desc">—</strong></div>
+      <div class="ai-row"><span>Monto</span><strong id="r-monto">—</strong></div>
+      <div class="ai-row"><span>Categoría</span><strong id="r-cat">—</strong></div>
+      <div class="ai-row"><span>Tarjeta</span><strong id="r-metodo">—</strong></div>
+    </div>
+    <button class="save-btn" id="save-btn" onclick="guardar()">Guardar gasto</button>
+  </div>
+</div>
+
+<div class="section">
+  <div class="list-card">
+    <h2>Historial</h2>
+    <div class="list-meta" id="list-meta">0 gastos este mes</div>
+    <div class="filter-row" id="filter-row"></div>
+    <div id="expense-list"><div class="empty">Aún no hay gastos registrados ✦</div></div>
+    <button class="export-btn" onclick="exportCSV()">↓ Exportar a Excel / CSV</button>
+  </div>
+</div>
+
+
+<div class="section" style="margin-top:14px">
+  <div class="form-card">
+    <h2>Cambiar mes</h2>
+    <div id="month-switch" style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:4px"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const SUELDO = 3000;
+const AHORRO_PCT = 0.20;
+const AHORRO = SUELDO * AHORRO_PCT;
+const MESES = ['Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+const FIJOS_MES = { 'Julio': 2961, 'Agosto': 1368, 'Septiembre': 1368, 'Octubre': 1368, 'Noviembre': 1368, 'Diciembre': 1368 };
+const FIJOS_DESC = { 'Julio': 'Fijos (1,268) + deuda arrastrada (1,961) ⚠', 'Agosto': 'ICA + Banco + Colegio (720)', 'Septiembre': 'ICA + Banco + Colegio (720)', 'Octubre': 'ICA + Banco + Colegio (720)', 'Noviembre': 'ICA + Banco + Colelio (720)', 'Diciembre': 'ICA + Banco + Colegio (720)' };
+const CAT_STYLES = {
+  'Alimentación': {bg:'#E8F0FB',color:'#1A4E8A'},
+  'Salud': {bg:'#D8F0E5',color:'#1B4332'},
+  'Ropa y accesorios': {bg:'#EEEDFE',color:'#3C3489'},
+  'Transporte': {bg:'#FEF0DC',color:'#7A3B0A'},
+  'Entretenimiento': {bg:'#FCEAED',color:'#9B2335'},
+  'Educación': {bg:'#FCEAED',color:'#7A1528'},
+  'Servicios': {bg:'#F1EFE8',color:'#444441'},
+  'Gym / Deporte': {bg:'#D8F0E5',color:'#0F4A2A'},
+  'Otros': {bg:'#F1EFE8',color:'#5F5E5A'}
+};
+
+let currentMonth = 'Julio';
+let selectedMethod = 'Tarjeta OH';
+let pending = null;
+let filterCat = 'Todos';
+
+function getData() {
+  try { return JSON.parse(localStorage.getItem('anny_gastos_v2') || '{}'); } catch(e) { return {}; }
+}
+function saveData(d) { localStorage.setItem('anny_gastos_v2', JSON.stringify(d)); }
+function getMonthGastos() { const d = getData(); return d[currentMonth] || []; }
+function saveMonthGastos(arr) { const d = getData(); d[currentMonth] = arr; saveData(d); }
+
+function fmt(n) {
+  return 'S/. ' + Number(n).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+function selectMethod(m, el) {
+  selectedMethod = m;
+  document.querySelectorAll('.method-opt').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+}
+
+function getFijos() { return FIJOS_MES[currentMonth] || 1368; }
+function getAhorro() { return currentMonth === 'Julio' ? 0 : AHORRO; }
+function getLibre() { return Math.max(0, SUELDO - getAhorro() - getFijos()); }
+
+function updateSummary() {
+  const gastos = getMonthGastos();
+  const total = gastos.reduce((s,g) => s + g.monto, 0);
+  const libre = getLibre();
+  const pct = Math.min(100, (total/libre)*100);
+
+  document.getElementById('fijos-val').textContent = fmt(getFijos());
+  document.getElementById('ahorro-meta-val').textContent = fmt(getAhorro());
+  document.getElementById('ahorro-sub').textContent = currentMonth === 'Julio' ? 'Mes de estabilización ⚠' : '20% del sueldo';
+  document.getElementById('fijos-sub').textContent = FIJOS_DESC[currentMonth] || '';
+  document.getElementById('libre-val').textContent = fmt(libre);
+  document.getElementById('gastado-val').textContent = fmt(total);
+
+  const rem = libre - total;
+  const rl = document.getElementById('libre-restante');
+  if (rem >= 0) {
+    rl.textContent = 'Libre: ' + fmt(rem);
+    rl.style.color = 'var(--muted)';
+  } else {
+    rl.textContent = '¡Excedido: ' + fmt(Math.abs(rem)) + '!';
+    rl.style.color = 'var(--red)';
+  }
+
+  const fill = document.getElementById('prog-fill');
+  fill.style.width = pct.toFixed(1) + '%';
+  fill.style.background = pct < 60 ? '#2D6A4F' : pct < 85 ? '#B5580A' : '#9B2335';
+
+  const fijPct = Math.min(100, (getFijos()/SUELDO)*100);
+  const ahorPct = (getAhorro()/SUELDO)*100;
+  const varPct = Math.min((total/SUELDO)*100, Math.max(0, 100 - fijPct - ahorPct));
+  const libPct = Math.max(0, 100 - fijPct - ahorPct - (total/SUELDO)*100);
+  document.getElementById('seg-fijos').style.width = fijPct.toFixed(1)+'%';
+  document.getElementById('seg-var').style.width = Math.min((total/SUELDO)*100, 100-fijPct-ahorPct).toFixed(1)+'%';
+  document.getElementById('seg-ahorro').style.width = ahorPct+'%';
+  document.getElementById('seg-libre').style.width = libPct.toFixed(1)+'%';
+}
+
+function getCats() {
+  const gastos = getMonthGastos();
+  const cats = ['Todos', ...new Set(gastos.map(g=>g.categoria))];
+  return cats;
+}
+
+function renderFilters() {
+  const row = document.getElementById('filter-row');
+  const cats = getCats();
+  row.innerHTML = cats.map(c =>
+    `<button class="filter-btn${c===filterCat?' active':''}" onclick="setFilter('${c}')">${c}</button>`
+  ).join('');
+}
+
+function setFilter(c) {
+  filterCat = c;
+  renderFilters();
+  renderList();
+}
+
+function renderList() {
+  const gastos = getMonthGastos();
+  const filtered = filterCat === 'Todos' ? gastos : gastos.filter(g=>g.categoria===filterCat);
+  const el = document.getElementById('expense-list');
+  document.getElementById('list-meta').textContent = gastos.length + ' gasto' + (gastos.length!==1?'s':'') + ' este mes · Total: ' + fmt(gastos.reduce((s,g)=>s+g.monto,0));
+
+  if (filtered.length === 0) {
+    el.innerHTML = '<div class="empty">Sin gastos' + (filterCat!=='Todos'?' en '+filterCat:'') + '</div>';
+    return;
+  }
+  el.innerHTML = filtered.slice().reverse().map((g, ri) => {
+    const realIdx = gastos.length - 1 - ri;
+    const s = CAT_STYLES[g.categoria] || CAT_STYLES['Otros'];
+    return `<div class="expense-item">
+      <div class="exp-left">
+        <div class="exp-desc">${g.desc}</div>
+        <div class="exp-meta">${g.metodo} · ${g.fecha}</div>
+        <span class="exp-cat" style="background:${s.bg};color:${s.color}">${g.categoria}</span>
+      </div>
+      <div class="exp-right">
+        <span class="exp-amt">${fmt(g.monto)}</span>
+        <button class="del-btn" onclick="eliminar(${realIdx})">Eliminar</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function eliminar(i) {
+  const gastos = getMonthGastos();
+  gastos.splice(i,1);
+  saveMonthGastos(gastos);
+  filterCat = 'Todos';
+  updateSummary();
+  renderFilters();
+  renderList();
+  showToast('Gasto eliminado');
+}
+
+async function analizarGasto() {
+  const desc = document.getElementById('gasto-input').value.trim();
+  if (!desc) { showToast('Escribe tu gasto primero'); return; }
+  const btn = document.getElementById('ai-btn');
+  btn.innerHTML = '<span class="spinner"></span>Analizando...';
+  btn.disabled = true;
+  document.getElementById('ai-result').style.display = 'none';
+  document.getElementById('save-btn').style.display = 'none';
+  pending = null;
+
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 300,
+        system: `Eres asistente de finanzas personales para una peruana. Extrae del texto: descripción corta (máx 5 palabras en español), monto en soles (número decimal), categoría (SOLO una de estas exactas: Alimentación, Salud, Ropa y accesorios, Transporte, Entretenimiento, Educación, Servicios, Gym / Deporte, Otros). Responde ÚNICAMENTE con JSON válido sin backticks ni texto adicional: {"desc":"...","monto":0.00,"categoria":"..."}`,
+        messages: [{ role: 'user', content: `Método: ${selectedMethod}. Gasto: ${desc}` }]
+      })
+    });
+    const data = await res.json();
+    const text = data.content.map(c => c.text||'').join('');
+    const clean = text.replace(/```json|```/g,'').trim();
+    const parsed = JSON.parse(clean);
+    const now = new Date();
+    pending = {
+      desc: parsed.desc,
+      monto: parseFloat(parsed.monto),
+      categoria: parsed.categoria,
+      metodo: selectedMethod,
+      fecha: now.toLocaleDateString('es-PE',{day:'2-digit',month:'2-digit'}),
+      mes: currentMonth
+    };
+    document.getElementById('r-desc').textContent = parsed.desc;
+    document.getElementById('r-monto').textContent = fmt(parsed.monto);
+    document.getElementById('r-cat').textContent = parsed.categoria;
+    document.getElementById('r-metodo').textContent = selectedMethod;
+    document.getElementById('ai-result').style.display = 'block';
+    document.getElementById('save-btn').style.display = 'block';
+  } catch(e) {
+    showToast('Error al analizar, intenta de nuevo');
+  }
+  btn.innerHTML = '✦ Analizar con IA';
+  btn.disabled = false;
+}
+
+function guardar() {
+  if (!pending) return;
+  const gastos = getMonthGastos();
+  gastos.push(pending);
+  saveMonthGastos(gastos);
+  pending = null;
+  document.getElementById('gasto-input').value = '';
+  document.getElementById('ai-result').style.display = 'none';
+  document.getElementById('save-btn').style.display = 'none';
+  filterCat = 'Todos';
+  updateSummary();
+  renderFilters();
+  renderList();
+  showToast('¡Gasto guardado! ✦');
+}
+
+function exportCSV() {
+  const gastos = getMonthGastos();
+  if (gastos.length === 0) { showToast('No hay gastos para exportar'); return; }
+  const rows = [['Fecha','Descripción','Monto','Categoría','Método','Mes']];
+  gastos.forEach(g => rows.push([g.fecha, g.desc, g.monto.toFixed(2), g.categoria, g.metodo, g.mes]));
+  const csv = rows.map(r => r.map(v => '"'+String(v).replace(/"/g,'""')+'"').join(',')).join('\n');
+  const blob = new Blob(['\uFEFF'+csv], {type:'text/csv;charset=utf-8;'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = 'gastos_anny_'+currentMonth+'.csv';
+  a.click(); URL.revokeObjectURL(url);
+  showToast('CSV exportado');
+}
+
+function switchMonth(m) {
+  currentMonth = m;
+  filterCat = 'Todos';
+  document.querySelectorAll('.month-btn').forEach(b => b.classList.toggle('active', b.dataset.m === m));
+  updateSummary();
+  renderFilters();
+  renderList();
+}
+
+function init() {
+  const now = new Date();
+  document.getElementById('fecha-display').textContent = now.toLocaleDateString('es-PE',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+
+  const sw = document.getElementById('month-switch');
+  MESES.forEach(m => {
+    const btn = document.createElement('button');
+    btn.className = 'month-btn' + (m===currentMonth?' active':'');
+    btn.textContent = m;
+    btn.dataset.m = m;
+    btn.onclick = () => switchMonth(m);
+    sw.appendChild(btn);
+  });
+
+  updateSummary();
+  renderFilters();
+  renderList();
+}
+
+init();
+</script>
+</body>
+</html>
