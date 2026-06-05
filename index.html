@@ -191,17 +191,7 @@ textarea { resize: none; min-height: 72px; }
   transition: opacity 0.15s;
 }
 .save-btn:active { opacity: 0.8; }
-.spinner {
-  display: inline-block;
-  width: 14px; height: 14px;
-  border: 2px solid rgba(255,255,255,0.4);
-  border-top-color: #fff;
-  border-radius: 50%;
-  animation: spin 0.7s linear infinite;
-  vertical-align: -2px;
-  margin-right: 6px;
-}
-@keyframes spin { to { transform: rotate(360deg); } }
+
 .list-card {
   background: var(--card);
   border: 1px solid var(--border);
@@ -348,15 +338,26 @@ textarea { resize: none; min-height: 72px; }
         <button class="method-opt" onclick="selectMethod('Yape / Efectivo',this)">Yape / Efectivo</button>
       </div>
     </div>
-    <button class="ai-btn" id="ai-btn" onclick="analizarGasto()">✦ Analizar con IA</button>
-    <div class="ai-result" id="ai-result">
-      <div class="ai-result-label">La IA detectó</div>
-      <div class="ai-row"><span>Descripción</span><strong id="r-desc">—</strong></div>
-      <div class="ai-row"><span>Monto</span><strong id="r-monto">—</strong></div>
-      <div class="ai-row"><span>Categoría</span><strong id="r-cat">—</strong></div>
-      <div class="ai-row"><span>Tarjeta</span><strong id="r-metodo">—</strong></div>
+    <div class="field-group">
+      <label class="field-label">Monto (S/.)</label>
+      <input type="number" id="monto-input" placeholder="Ej: 35.50" min="0" step="0.01" inputmode="decimal">
     </div>
-    <button class="save-btn" id="save-btn" onclick="guardar()">Guardar gasto</button>
+    <div class="field-group">
+      <label class="field-label">Categoría</label>
+      <select id="cat-input">
+        <option value="">Selecciona una categoría</option>
+        <option>Alimentación</option>
+        <option>Salud</option>
+        <option>Ropa y accesorios</option>
+        <option>Transporte</option>
+        <option>Entretenimiento</option>
+        <option>Educación</option>
+        <option>Servicios</option>
+        <option>Gym / Deporte</option>
+        <option>Otros</option>
+      </select>
+    </div>
+    <button class="save-btn" id="save-btn" onclick="guardar()" style="display:block;margin-top:4px">Guardar gasto</button>
   </div>
 </div>
 
@@ -401,7 +402,6 @@ const CAT_STYLES = {
 
 let currentMonth = 'Julio';
 let selectedMethod = 'Tarjeta OH';
-let pending = null;
 let filterCat = 'Todos';
 
 function getData() {
@@ -527,62 +527,28 @@ function eliminar(i) {
   showToast('Gasto eliminado');
 }
 
-async function analizarGasto() {
-  const desc = document.getElementById('gasto-input').value.trim();
-  if (!desc) { showToast('Escribe tu gasto primero'); return; }
-  const btn = document.getElementById('ai-btn');
-  btn.innerHTML = '<span class="spinner"></span>Analizando...';
-  btn.disabled = true;
-  document.getElementById('ai-result').style.display = 'none';
-  document.getElementById('save-btn').style.display = 'none';
-  pending = null;
-
-  try {
-    const res = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: {'Content-Type':'application/json'},
-      body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
-        max_tokens: 300,
-        system: `Eres asistente de finanzas personales para una peruana. Extrae del texto: descripción corta (máx 5 palabras en español), monto en soles (número decimal), categoría (SOLO una de estas exactas: Alimentación, Salud, Ropa y accesorios, Transporte, Entretenimiento, Educación, Servicios, Gym / Deporte, Otros). Responde ÚNICAMENTE con JSON válido sin backticks ni texto adicional: {"desc":"...","monto":0.00,"categoria":"..."}`,
-        messages: [{ role: 'user', content: `Método: ${selectedMethod}. Gasto: ${desc}` }]
-      })
-    });
-    const data = await res.json();
-    const text = data.content.map(c => c.text||'').join('');
-    const clean = text.replace(/```json|```/g,'').trim();
-    const parsed = JSON.parse(clean);
-    const now = new Date();
-    pending = {
-      desc: parsed.desc,
-      monto: parseFloat(parsed.monto),
-      categoria: parsed.categoria,
-      metodo: selectedMethod,
-      fecha: now.toLocaleDateString('es-PE',{day:'2-digit',month:'2-digit'}),
-      mes: currentMonth
-    };
-    document.getElementById('r-desc').textContent = parsed.desc;
-    document.getElementById('r-monto').textContent = fmt(parsed.monto);
-    document.getElementById('r-cat').textContent = parsed.categoria;
-    document.getElementById('r-metodo').textContent = selectedMethod;
-    document.getElementById('ai-result').style.display = 'block';
-    document.getElementById('save-btn').style.display = 'block';
-  } catch(e) {
-    showToast('Error al analizar, intenta de nuevo');
-  }
-  btn.innerHTML = '✦ Analizar con IA';
-  btn.disabled = false;
-}
-
 function guardar() {
-  if (!pending) return;
+  const desc = document.getElementById('gasto-input').value.trim();
+  const monto = parseFloat(document.getElementById('monto-input').value);
+  const cat = document.getElementById('cat-input').value;
+  if (!desc) { showToast('Escribe una descripción'); return; }
+  if (!monto || monto <= 0) { showToast('Ingresa un monto válido'); return; }
+  if (!cat) { showToast('Selecciona una categoría'); return; }
+  const now = new Date();
+  const gasto = {
+    desc: desc,
+    monto: monto,
+    categoria: cat,
+    metodo: selectedMethod,
+    fecha: now.toLocaleDateString('es-PE',{day:'2-digit',month:'2-digit'}),
+    mes: currentMonth
+  };
   const gastos = getMonthGastos();
-  gastos.push(pending);
+  gastos.push(gasto);
   saveMonthGastos(gastos);
-  pending = null;
   document.getElementById('gasto-input').value = '';
-  document.getElementById('ai-result').style.display = 'none';
-  document.getElementById('save-btn').style.display = 'none';
+  document.getElementById('monto-input').value = '';
+  document.getElementById('cat-input').value = '';
   filterCat = 'Todos';
   updateSummary();
   renderFilters();
